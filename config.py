@@ -9,3 +9,5 @@ class ProdConfig(Config):
 
 class DevConfig(Config):
     DEBUG = True
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:root123.@127.0.0.1:3306/CarltonXu"
+    SQLALCHEMY_ECHO=True

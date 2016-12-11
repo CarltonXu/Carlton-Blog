@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 class Config(object):
-    pass
+    SECRET_KEY = 'c3f5e2fdf0fcfe60f3d531a8774971b1'
 
 
 class ProdConfig(Config):

@@ -78,6 +78,7 @@ class Tag(db.Model):
     def __repr__(self):
         return "<Tag `{}`>".format(self.title)
 
+
 def sidebar_data():
     recent = Post.query.order_by(
             Post.publish_date.desc()
@@ -88,7 +89,8 @@ def sidebar_data():
                 tags
             ).group_by(Tag).order_by('total DESC').limit(5).all()
 
-            return recent, top_tags
+    return recent, top_tags
+
 
 @app.route('/')
 @app.route('/<int:page>')
@@ -110,8 +112,8 @@ def home(page=1):
 def post(post_id):
     post =  Post.query.get_or_404(post_id)
     tags = post.tags
-    comments = post.comments,order_by(Comment.date.desc().all()
-    recent,top_tags = sidebar_data()
+    comments = post.comments,order_by(Comment.date.desc()).all()
+    recent, top_tags = sidebar_data()
 
     return render_template(
         'post.html',
@@ -123,11 +125,11 @@ def post(post_id):
     )
 
 
-@app.route('tag/<string:tag_name>')
+@app.route('/tag/<string:tag_name>')
 def tag(tag_name):
     tag = Tag.query.filter_y(title=tag_name).first_or_404()
-    posts = tag.posts.order_by(Post.publish_date.desc().all()
-    recent, top_tags = sidebar_date()
+    posts = tag.posts.order_by(Post.publish_date.desc()).all()
+    recent, top_tags = sidebar_data()
 
     return render_template(
         'tag.html',
@@ -141,7 +143,7 @@ def tag(tag_name):
 @app.route('/user/<string:username>')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    posts = user.posts.order_by(Post.publish_date.desc().all()
+    posts = user.posts.order_by(Post.publish_date.desc()).all()
     recent, top_tags = sidebar_data()
 
     return render_template(

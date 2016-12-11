@@ -10,6 +10,7 @@ from sqlalchemy import func
 from flask_wtf import Form
 from wtforms import StringField, TextAreaField
 from wtforms.validators import DataRequired, Length
+from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(DevConfig)
@@ -37,6 +38,7 @@ tags = db.Table('post_tags',
         db.Column('post_id', db.Integer, db.ForeignKey('post.id')),
         db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
         )
+
 
 class Post(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -85,7 +87,9 @@ class Tag(db.Model):
 
 
 class CommentForm(Form):
-    name = StringField('Name',validators=[DataRequired(), Length(max=255)])
+    name = StringField('Name',
+            validators=[DataRequired(), Length(max=255)]
+    )
     text = TextAreaField(u'Comment', validators=[DataRequired()])
 
     def custom_email(form, field):
@@ -104,6 +108,34 @@ def sidebar_data():
             ).group_by(Tag).order_by('total DESC').limit(5).all()
 
     return recent, top_tags
+
+
+@app.route('/post/<int:post_id>', methods=('GET', 'POST'))
+def post(post_id):
+    form = CommentForm()
+    if form.validate_on_submit():
+        new_comment = Comment()
+        new_comment.name = form.name.data
+        new_comment.text = form.text.data
+        new_comment.post_id = post_id
+        new_comment.date = datetime.now()
+        db.session.add(new_comment)
+        db.session.commit()
+
+    post = Post.query.get_or_404(post_id)
+    tags = post.tags
+    comments = post.comments.order_by(Comment.date.desc()).all()
+    recent, top_tags = sidebar_data()
+
+    return render_template(
+            'post.html',
+            post=post,
+            tags=tags,
+            comments=comments,
+            recent=recent,
+            top_tags=top_tags,
+            form=form
+    )
 
 
 @app.route('/')
@@ -150,32 +182,6 @@ def user(username):
         recent=recent,
         top_tags=top_tags
     )
-
-@app.route('/post/<int:post_id>', methods=('GET', 'POST'))
-def post(post_id):
-    form = CommentForm()
-    if form.validate_on_submit():
-        new_comment = Comment()
-    new_comment.name = form.name.data
-    new_comment.text = form.text.data
-    new_comment.post_id = post_id
-    new_comment.date = datetime.datetime.now()
-    db.session.add(new_comment)
-    db.session.commit()
-    post = Post.query.get_or_404(post_id)
-    tags = post.tags
-    comments = post.comments.order_by(Comment.date.desc()).all()
-    recent, top_tags = sidebar_data()
-
-    return render_template(
-            'post.html',
-            post=post,
-            tags=tags,
-            comments=commnets,
-            recent=recent,
-            top_tags=top_tags,
-            form=form
-            )
 
 if __name__ == "__main__":
     app.run()
